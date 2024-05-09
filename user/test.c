@@ -5,7 +5,7 @@
 #include "kernel/fs.h"
 #include "kernel/fcntl.h"
 
-#define MAXFILE2 11
+#define MAXFILE2 MAXFILE
 
 static uint64 next = 1;
 
@@ -22,6 +22,7 @@ void srand(uint64 seed) {
 uint64 buf[BUFSIZE];
 
 int main() {
+  printf("bigfile test is running!\n");
   int fd = open("big", O_CREATE|O_RDWR);
   if(fd < 0){
     printf("error: creat big failed!\n");
@@ -30,14 +31,13 @@ int main() {
 
   int cnt = 0;
   srand(1);
-  int x;
   for(int i = 0; i < MAXFILE2 * BUFSIZE; ++i){
     rand();
     buf[cnt++] = next;
     cnt %= BUFSIZE;
     if(!cnt) {	
-      if ((x = write(fd, buf, BUFSIZE)) != BUFSIZE){
-      	printf("error: write big file failed, writed: %d\n", x);
+      if (write(fd, buf, BSIZE) != BSIZE){
+      	printf("error: write big file failed!\n");
       	exit(1);
       }
       else if (i / BUFSIZE % 1000 == 0) printf("%d/%d block writed!\n", i / BUFSIZE, MAXFILE2);
@@ -55,20 +55,21 @@ int main() {
   cnt = 0;
   srand(1);
   for(int i = 0; i < MAXFILE2; ++i){
-    if (read(fd, buf, BUFSIZE) != BUFSIZE){
+    if (read(fd, buf, BSIZE) != BSIZE){
  	  printf("error: write big file failed\n", i);
       exit(1);
     } else {
       for (int j = 0; j < BUFSIZE; ++j) {
       	rand();
-      	printf("%d == %d\n", next, buf[j]);
-        // if (next != buf[j]) {
-          // printf("test failed!\n");
-          // exit(0);
-        // }
+      	//printf("%d == %d\n", next, buf[j]);
+        if (next != buf[j]) {
+          printf("status: test failed!\n");
+          exit(0);
+        }
       }
     }
   }
-  
+
+  printf("status: OK\n");
   close(fd);
 }
